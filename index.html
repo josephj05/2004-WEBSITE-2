@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fridge2Table · What can I cook with...</title>
+
+  <!-- Google Fonts: Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Sticky header with app branding and global actions -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="header-top">
+        <h1 class="app-title">
+          <span class="logo-icon" aria-hidden="true">🥗</span>
+          <span class="logo-text">
+            Fridge<span class="accent">2</span>Table
+          </span>
+        </h1>
+        <div class="header-actions">
+          <!-- Toggle button for collapsing/expanding the search panel -->
+          <button
+            type="button"
+            id="toggle-status-btn"
+            class="btn primary-btn menu-btn"
+            aria-expanded="true"
+            aria-controls="search-panel"
+          >
+            ☰ Search
+          </button>
+          <!-- High-contrast / eye comfort toggle -->
+          <button
+            type="button"
+            id="contrast-toggle"
+            class="btn tertiary-btn contrast-toggle"
+            aria-pressed="false"
+          >
+            Enable eye comfort mode
+          </button>
+        </div>
+      </div>
+      <p class="tagline">
+        Not sure what to eat today? Just type the <strong>ingredients</strong> in your fridge — <br />
+        I’ll give you plenty of <em>delicious options</em>!
+      </p>
+    </div>
+  </header>
+
+  <!-- Main single-page app content -->
+  <main class="site-main">
+    <div class="container main-inner">
+      <!-- Search panel (open by default, can be collapsed by ☰ Search) -->
+      <section
+        id="search-panel"
+        class="search-panel card"
+        aria-labelledby="search-title"
+      >
+        <h2 id="search-title" class="section-title">What’s in your fridge today?</h2>
+
+        <!-- Main search form: user enters comma-separated ingredients -->
+        <form id="search-form" class="search-form" autocomplete="off">
+          <label for="ingredients-input" class="field-label">Type your ingredients</label>
+          <div class="search-row">
+            <input
+              type="text"
+              id="ingredients-input"
+              name="ingredients"
+              class="text-input"
+              placeholder="e.g. chicken, rice, tomato"
+              required
+              autocomplete="off"
+            />
+            <button type="submit" class="btn primary-btn">
+              Find recipes
+            </button>
+          </div>
+          <p class="hint">
+            Tip: separate ingredients with commas. Start simple — try just
+            <code>egg</code> or <code>chicken</code>.
+          </p>
+
+          <!-- Random ingredient generator CTA -->
+          <div class="suggest-row">
+            <button
+              type="button"
+              id="random-ingredients-btn"
+              class="btn secondary-btn"
+            >
+              Surprise me with random ingredients
+            </button>
+            <p class="suggest-hint">
+              Not sure where to start? I’ll generate a random combo you can edit.
+            </p>
+          </div>
+        </form>
+
+        <!-- Live status message under the search -->
+        <p
+          id="status-message"
+          class="status-message"
+          role="status"
+          aria-live="polite"
+        >
+          Start by adding a couple of ingredients above ✨
+        </p>
+      </section>
+
+      <!-- Results + filters panel -->
+      <section
+        class="results-panel card"
+        aria-live="polite"
+        aria-label="Recipe results and filters"
+      >
+        <div class="results-header-block">
+          <div class="results-header">
+            <h2 class="section-title">Here’s what you can make</h2>
+            <p class="results-meta">
+              Using: <span id="results-query" class="query-chip">—</span>
+              · <span id="results-count">0</span> idea(s) found
+            </p>
+          </div>
+
+          <!-- Sorting and filtering controls -->
+          <div class="controls-row">
+            <div class="control-group">
+              <label for="sort-select" class="field-label">Sort by</label>
+              <select id="sort-select" class="select-input">
+                <option value="name-az">Name (A → Z)</option>
+                <option value="name-za">Name (Z → A)</option>
+                <option value="time-asc">Time (shortest first)</option>
+                <option value="time-desc">Time (longest first)</option>
+              </select>
+            </div>
+
+            <div class="control-group checkbox-group">
+              <input type="checkbox" id="fast-only" />
+              <label for="fast-only">Show quick meals only (&le; 20 minutes)</label>
+            </div>
+
+            <div class="control-group checkbox-group">
+              <input type="checkbox" id="favorites-only" />
+              <label for="favorites-only">Show favorites only</label>
+            </div>
+          </div>
+
+          <p class="controls-hint">
+            Times are rough estimates based on the recipe name — use filters to quickly narrow things down.
+          </p>
+        </div>
+
+        <!-- Loading indicator for API calls -->
+        <div
+          id="loading-spinner"
+          class="loading hidden"
+          aria-hidden="true"
+        >
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="loading-text">Finding delicious recipes...</span>
+        </div>
+
+        <!-- Recipe cards will be rendered here -->
+        <div id="results-grid" class="results-grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Accessible recipe details modal -->
+  <section
+    id="modal-overlay"
+    class="modal-overlay hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-title"
+  >
+    <div class="modal-card card">
+      <button
+        class="modal-close-btn btn"
+        id="modal-close-btn"
+        aria-label="Close details"
+        type="button"
+      >
+        ✕
+      </button>
+      <div id="modal-content"></div>
+    </div>
+  </section>
+
+  <!-- Footer with data source attribution -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p class="footer-text">
+        Recipe data from
+        <a href="https://www.themealdb.com" target="_blank" rel="noreferrer">
+          TheMealDB
+        </a>. No personal data is stored.
+      </p>
+    </div>
+  </footer>
+
+  <!-- App Script -->
+  <script src="app.js" defer></script>
+</body>
+</html>
